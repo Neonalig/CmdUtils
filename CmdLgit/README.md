@@ -10,7 +10,7 @@ Log commands have different parameters to default to a paginated, formatted tree
 The above example will attempt to execute `log --oneline --graph --color --all --decorate -n 5`.
 
 ## Installation
-Get the [latest release](Releases/latest) from the [Releases](Releases) tab, and extract the `LGit.exe` executable to a known location.
+Get the [latest release](../../../releases/tag/CmdLGit/latest) from the [Releases](../../../releases) tab, and extract the `LGit.exe` executable to a known location.
 This location must then be [added to the PATH environment variable](adding-the-program-to-path).
 
 ## Manual Installation
