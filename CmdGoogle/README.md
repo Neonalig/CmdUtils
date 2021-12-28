@@ -6,7 +6,7 @@ Allows users to query the google search engine in their default browser from the
 The above example will open a google search with the specified `rick astley` query into your default system browser.
 
 ## Installation
-Get the [latest release](Releases/latest) from the [Releases](Releases) tab, and extract the `Google.exe` executable to a known location.
+Get the [latest release](../../../releases/tag/CmdGoogle/latest) from the [Releases](../../../releases) tab, and extract the `Google.exe` executable to a known location.
 This location must then be [added to the PATH environment variable](adding-the-program-to-path).
 
 ## Manual Installation
