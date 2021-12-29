@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 
@@ -29,12 +28,30 @@ bool GetDirectory( string Path, out DirectoryInfo Dir ) {
 //}
 
 //Generates a random number in the given range, excluding a specific value.
-int GetRandomNotIncluding( Random Rnd, int Min, int Max, int Exc ) => Rnd.Next(0, 2) == 0 ? Rnd.Next(Min, Exc) : Rnd.Next(Exc + 1, Max);
+int GetRandomNotIncluding( Random Rnd, int Min, int Max, int Exc ) {
+    if ( Exc >= Min && Exc < Max ) {
+        int[] Opt = new int[Max - Min - 1];
+        for ( int I = Min; I < Max; I++ ) {
+            if ( I == Exc ) {
+                continue;
+            }
+            if ( I > Exc ) {
+                Opt[I - Min - 1] = I;
+            } else {
+                Opt[I - Min] = I;
+            }
+        }
+        return Opt.Length == 0 ? Min : Opt[Rnd.Next(0, Opt.Length)];
+    }
+    return Rnd.Next(Min, Max);
+}
 
 //Gets a random directory form the collection, allowing a 'Last' value to be passed to ensure the user is never offered the same directory twice in a row.
 DirectoryInfo GetRandom( DirectoryInfo[] Possible, int Cnt, int? Last, Random Rnd ) {
+    Debug.WriteLine($"Choosing between 0..{Cnt} (excluding {Last})");
     int ChosenInd = Last.HasValue ? GetRandomNotIncluding(Rnd, 0, Cnt, Last.Value) : Rnd.Next(0, Cnt);
-    DirectoryInfo Chosen = Possible[Rnd.Next(0, Cnt)];
+    Debug.WriteLine($"\tChose {ChosenInd}");
+    DirectoryInfo Chosen = Possible[ChosenInd];
     while ( true ) {
         Console.Write($"Play from '{Chosen.Name}'? [Y]es/[N]o: ");
         ConsoleKey Input = Console.ReadKey().Key;
@@ -70,47 +87,44 @@ void Write<T>( FileInfo Dest, T Data, JsonSerializer Serialiser ) {
 
 #endregion
 
-//Parse user arguments. Usage is as such 'playrandom "[directory]"(optional) [--back|-b {n}(optional)](optional).
-//The directory argument specifies the album directory to get random folders from. If no directory is specified, the current working directory is used instead.
-//The 'back' argument allows the user to back-travel into parent directories (useful for when used in context menus). For example, at the directory "c:\windows\system32\IME", using --back 2, (or -b 2) results in "c:\windows\"
-//The regex allows arguments to be given in a variety of ways, such as:
-//1. "F:\Music\_Albums\"
-//2. "F:\Music\_Albums\ --back"
-//3. "F:\Music\_Albums\ -b"
-//4. "F:\Music\_Albums\ --back 2"
-//5. "F:\Music\_Albums\ -b 2"
-//Examples 2,3 and 4,5 are equivalent, just using the '-b' shorthand for '--back'.
-Regex ArgRegex = new Regex("^(?:\"(?<Directory>[^\"]+)\" ?)?(?<Back>-(?:-back|b)(?: (?<BackTimes>\\d+))?)?");
+//Parse user arguments.
+//Supported usages are as follows:
+//"F:\Music\_Albums"
+//"F:\Music\_Albums" -b
+//"F:\Music\_Albums" --back
+//"F:\Music\_Albums" -b 2
+//"F:\Music\_Albums" --back 2
+//-b 2 "F:\Music\_Albums"
+//--back 2 "F:\Music\_Albums"
+bool ArgBackSupplied = false;
+int ArgBackTimes = 0;
 DirectoryInfo? Base = null;
-int BackTimes = 0;
-
-if ( args.Length > 0 ) {
-    string ArgsStr = string.Join(' ', args);
-    Match M = ArgRegex.Match(ArgsStr);
-    Debug.WriteLine($"Arguments were '{ArgsStr}' (success? {M.Success})");
-    if ( M.Success ) {
-        Group MDirGroup = M.Groups["Directory"];
-        if ( MDirGroup.Success && GetDirectory(MDirGroup.Value, out DirectoryInfo ActiveDir) ) {
-            Base = ActiveDir;
-        }
-        Group MBkGroup = M.Groups["Back"];
-        if ( MBkGroup.Success ) {
-            BackTimes = 1;
-            Group MBkTmsGroup = M.Groups["BackTimes"];
-            if ( MBkTmsGroup.Success && int.TryParse(MBkTmsGroup.Value, out int ExplicitBackTimes) ) {
-                BackTimes = ExplicitBackTimes;
+foreach( string Arg in args ) {
+    switch (Arg) {
+        case "--back":
+        case "-b":
+            ArgBackSupplied = true;
+            break;
+        default:
+            if ( int.TryParse(Arg, out int SupposedBackTimes) ) {
+                ArgBackTimes = SupposedBackTimes;
+            } else if ( GetDirectory(Arg, out DirectoryInfo ArgDir) ) {
+                Base = ArgDir;
             }
-        }
+            break;
     }
 }
 
 Base ??= new DirectoryInfo(Environment.CurrentDirectory);
-for ( int I = 0; I < BackTimes; I++ ) {
-    if ( Base.Parent is { } Parent ) {
-        Base = Parent;
-    } else {
-        Console.WriteLine($"Directory back-travel limit exceed. No parents found for directory '{Base.FullName}'");
-        break;
+if ( ArgBackSupplied ) {
+    if ( ArgBackTimes <= 0 ) { ArgBackTimes = 1; }
+    for ( int I = 0; I < ArgBackTimes; I++ ) {
+        if ( Base.Parent is { } Parent ) {
+            Base = Parent;
+        } else {
+            Console.WriteLine($"Directory back-travel limit exceeded. No parents found for directory '{Base.FullName}'");
+            break;
+        }
     }
 }
 
