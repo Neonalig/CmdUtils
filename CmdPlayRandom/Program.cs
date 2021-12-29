@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 
@@ -69,12 +70,49 @@ void Write<T>( FileInfo Dest, T Data, JsonSerializer Serialiser ) {
 
 #endregion
 
-//Get the directory from either the user's supplied arguments, or if that is empty or invalid, the current working directory instead.
-DirectoryInfo Base = /*GetFirst(args, out string Arg)
-                     && GetDirectory(Arg, out DirectoryInfo D)*/
-                    GetDirectory(string.Join(' ', args), out DirectoryInfo D)
-                        ? D
-                        : new DirectoryInfo(Environment.CurrentDirectory);
+//Parse user arguments. Usage is as such 'playrandom "[directory]"(optional) [--back|-b {n}(optional)](optional).
+//The directory argument specifies the album directory to get random folders from. If no directory is specified, the current working directory is used instead.
+//The 'back' argument allows the user to back-travel into parent directories (useful for when used in context menus). For example, at the directory "c:\windows\system32\IME", using --back 2, (or -b 2) results in "c:\windows\"
+//The regex allows arguments to be given in a variety of ways, such as:
+//1. "F:\Music\_Albums\"
+//2. "F:\Music\_Albums\ --back"
+//3. "F:\Music\_Albums\ -b"
+//4. "F:\Music\_Albums\ --back 2"
+//5. "F:\Music\_Albums\ -b 2"
+//Examples 2,3 and 4,5 are equivalent, just using the '-b' shorthand for '--back'.
+Regex ArgRegex = new Regex("^(?:\"(?<Directory>[^\"]+)\" ?)?(?<Back>-(?:-back|b)(?: (?<BackTimes>\\d+))?)?");
+DirectoryInfo? Base = null;
+int BackTimes = 0;
+
+if ( args.Length > 0 ) {
+    string ArgsStr = string.Join(' ', args);
+    Match M = ArgRegex.Match(ArgsStr);
+    Debug.WriteLine($"Arguments were '{ArgsStr}' (success? {M.Success})");
+    if ( M.Success ) {
+        Group MDirGroup = M.Groups["Directory"];
+        if ( MDirGroup.Success && GetDirectory(MDirGroup.Value, out DirectoryInfo ActiveDir) ) {
+            Base = ActiveDir;
+        }
+        Group MBkGroup = M.Groups["Back"];
+        if ( MBkGroup.Success ) {
+            BackTimes = 1;
+            Group MBkTmsGroup = M.Groups["BackTimes"];
+            if ( MBkTmsGroup.Success && int.TryParse(MBkTmsGroup.Value, out int ExplicitBackTimes) ) {
+                BackTimes = ExplicitBackTimes;
+            }
+        }
+    }
+}
+
+Base ??= new DirectoryInfo(Environment.CurrentDirectory);
+for ( int I = 0; I < BackTimes; I++ ) {
+    if ( Base.Parent is { } Parent ) {
+        Base = Parent;
+    } else {
+        Console.WriteLine($"Directory back-travel limit exceed. No parents found for directory '{Base.FullName}'");
+        break;
+    }
+}
 
 //Find all album directories and enumerate
 DirectoryInfo[] Options = Base.GetDirectories();
