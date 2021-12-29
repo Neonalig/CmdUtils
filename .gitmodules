@@ -1,0 +1,9 @@
+[submodule "CmdGoogle"]
+	path = CmdGoogle
+	url = https://github.com/starflash-studios/CmdGoogle
+[submodule "CmdLGit"]
+	path = CmdLGit
+	url = https://github.com/starflash-studios/CmdLGit
+[submodule "CmdPlayRandom"]
+	path = CmdPlayRandom
+	url = https://github.com/starflash-studios/CmdPlayRandom
