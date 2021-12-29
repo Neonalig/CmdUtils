@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "environmentVariables": {},
+      "distributionName": ""
+    },
+    "CmdPlayRandom": {
+      "commandName": "Project",
+      "commandLineArgs": "F:\\Music\\Albums"
+    }
+  }
+}

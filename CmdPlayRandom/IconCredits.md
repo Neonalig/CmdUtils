@@ -1,0 +1,1 @@
+Icons made by [Rudez Studio](https://icon-icons.com/users/VQZEcRjhvoQrxKTiDRNDT/icon-sets/) from [www.icon-icons.com](https://icon-icons.com/icon/sound-audio-music-player/113867)
