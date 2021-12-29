@@ -1,1 +1,0 @@
-Icons made by [Rebin Infotech](https://icon-icons.com/users/ZRzsPNiiVulnOScUtZHFM/icon-sets/) from [www.icon-icons.com](https://icon-icons.com/icon/google/62736)
