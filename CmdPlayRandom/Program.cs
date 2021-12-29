@@ -29,21 +29,10 @@ bool GetDirectory( string Path, out DirectoryInfo Dir ) {
 
 //Generates a random number in the given range, excluding a specific value.
 int GetRandomNotIncluding( Random Rnd, int Min, int Max, int Exc ) {
-    if ( Exc >= Min && Exc < Max ) {
-        int[] Opt = new int[Max - Min - 1];
-        for ( int I = Min; I < Max; I++ ) {
-            if ( I == Exc ) {
-                continue;
-            }
-            if ( I > Exc ) {
-                Opt[I - Min - 1] = I;
-            } else {
-                Opt[I - Min] = I;
-            }
-        }
-        return Opt.Length == 0 ? Min : Opt[Rnd.Next(0, Opt.Length)];
-    }
-    return Rnd.Next(Min, Max);
+    if ( Exc < Min || Exc >= Max ) { return Rnd.Next(Min, Max); }
+    if ( Exc == Min ) { return Rnd.Next(Min + 1, Max); }
+    if ( Exc == Max - 1 ) { return Rnd.Next(Min, Max - 1); }
+    return Rnd.Next(0, 2) == 0 ? Rnd.Next(Min, Exc) : Rnd.Next(Exc + 1, Max);
 }
 
 //Gets a random directory form the collection, allowing a 'Last' value to be passed to ensure the user is never offered the same directory twice in a row.
@@ -86,6 +75,12 @@ void Write<T>( FileInfo Dest, T Data, JsonSerializer Serialiser ) {
 }
 
 #endregion
+
+//Set console encoding to system default. (i.e. UTF-8 as opposed to ASCII)
+Console.OutputEncoding = System.Text.Encoding.Default;
+//Console.OutputEncoding = System.Text.Encoding.UTF8;
+//PInvoke.SetConsoleOutputCP(65001);
+//PInvoke.SetConsoleCP(65001);
 
 //Parse user arguments.
 //Supported usages are as follows:

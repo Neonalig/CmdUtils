@@ -16,7 +16,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="PInvoke.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PInvoke.cs" />
   </ItemGroup>
 
   <ItemGroup>
